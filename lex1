@@ -1,0 +1,198 @@
+# include <iostream>
+# include <cstdio>
+# include <cstring>
+# include <string>
+# include <fstream>
+using namespace std ;
+
+string k[8] = {"do" , "end" , "for" , "if" , "printf" , "scanf" , "then" , "while" } ;
+string op[4]={"+" , "-" , "*" , "/" };
+string s[8]={"," , ";" , "(" , ")" , "[" , "]" , "{" , "}"} ;
+
+
+bool IsKey(string ss) //关键字判断函数
+{
+     int i;
+     for(i = 0 ; i < 8 ; i++)
+         if(k[i] == ss)
+             return true;
+
+     return false;
+}
+
+bool IsOptr(string ss) //运算符判断函数
+{
+    int i;
+    for(i = 0 ; i < 4 ; i++)
+       if(op[i] == ss)
+          return true ;
+    return false;
+}
+
+bool IsSeparator(string ss) //分界符判断函数
+{
+    int i;
+    for(i = 0 ; i < 8 ; i++)
+        if(s[i] == ss)
+           return true;
+    return false;
+}
+
+bool IsLetter(char c) //字母判断函数
+{
+    if(((c>='a')&&(c<='z'))||((c>='A')&&(c<='Z')))
+        return true;
+
+    return false;
+ }
+
+bool IsDigit(char c)  //数字判断函数
+{
+    if(c >= '0' && c <= '9')
+        return true;
+
+    return false;
+}
+
+int main()
+{
+
+    char ch;
+    string st = "" ;
+    string temp ;
+    int line = 1 , row = 0 ;    
+    cout<<"单词"<<"\t二元序列"<<"\t类型"<<'\t'<<'\t'<<"位置"<<"("<<"行，列"<<")"<<endl;
+    
+    FILE * fp ;
+    fp = fopen("in1.txt","r") ;
+    //fp = fopen("in2.txt","r") ;
+    //fp = fopen("in3.txt","r") ;
+
+    while((ch = fgetc(fp))!=EOF)
+    {
+
+        st = "" ;
+        if (ch == ' ')
+            continue ;
+
+        if (ch == '\n')
+        {
+            line++ ;
+            row = 0 ;
+            continue ;
+        }
+        if (IsLetter(ch))
+        {
+            row++ ;
+            while(IsLetter(ch) || IsDigit(ch))
+            {
+                st += ch ;
+                ch = fgetc(fp) ;
+            }
+
+            fseek(fp,-1L,SEEK_CUR);
+
+            if (IsKey(st))
+                cout<<st<<"\t("<<1<<","<<st<<")"<<'\t'<<'\t'<<"关键字 "<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+            else
+                cout<<st<<"\t("<<6<<","<<st<<")"<<'\t'<<'\t'<<"标识符 "<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+        }
+        else if (IsDigit(ch))
+        {
+            row++ ;
+            while(IsDigit(ch))
+            {
+                st += ch ;
+                ch = fgetc(fp) ;
+            }
+            if (IsLetter(ch))
+            {
+                while(IsLetter(ch) || IsDigit(ch))
+                {
+                    st += ch ;
+                    ch = fgetc(fp) ;
+                }
+                fseek(fp,-1L,SEEK_CUR);
+                cout<<st<<'\t'<<"Error"<<'\t'<<'\t'<<"Error"<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl ;
+            }
+            else
+            {
+                fseek(fp,-1L,SEEK_CUR);
+                cout<<st<<"\t("<<5<<","<<st<<")"<<'\t'<<'\t'<<"常数"<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+            }
+
+        }
+        else
+        {
+            st += ch ;
+
+            if (IsOptr(st))
+            {
+                row++ ;
+                ch = fgetc(fp) ;
+                temp = ch ;
+                if (IsOptr(temp))
+                {
+                    st += ch ;
+                    cout<<st<<'\t'<<"Error"<<'\t'<<'\t'<<"Error"<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl ;
+                }
+
+                else
+                {
+                    cout<<st<<"\t("<<3<<","<<st<<")"<<'\t'<<'\t'<<"算术运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                    fseek(fp,-1L,SEEK_CUR);
+                }
+
+            }
+            else if (IsSeparator(st))
+            {
+                row++ ;
+                cout<<st<<"\t("<<2<<","<<st<<")"<<'\t'<<'\t'<<"分界符"<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+            }
+            else
+            {
+                if (st == "=")
+                {
+                    row++ ;
+                    cout<<"="<<"\t("<<4<<","<<"="<<")"<<'\t'<<"\t关系运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                }
+                else if (ch == '>')
+                {
+                    row++ ;
+                    ch = fgetc(fp) ;
+                    if (ch == '=')
+                       cout<<">="<<"\t("<<4<<","<<">="<<")"<<'\t'<<"\t关系运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                    else
+                    {
+                       cout<<">"<<"\t("<<4<<","<<">"<<")"<<'\t'<<"\t关系运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                       fseek(fp,-1L,SEEK_CUR);
+                    }
+
+                }
+                else if (ch == '<')
+                {
+                    row++ ;
+                    ch = fgetc(fp) ;
+                    if (ch == '=')
+                       cout<<"<="<<"\t("<<4<<","<<"<="<<")"<<'\t'<<"\t关系运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                    else
+                    {
+                       cout<<"<"<<"\t("<<4<<","<<"<"<<")"<<'\t'<<"\t关系运算符"<<'\t'<<"("<<line<<","<<row<<")"<<endl;
+                       fseek(fp,-1L,SEEK_CUR);
+                    }
+
+                }
+                else
+                {
+                    row++ ;
+                    cout<<st<<'\t'<<"Error"<<'\t'<<'\t'<<"Error"<<'\t'<<'\t'<<"("<<line<<","<<row<<")"<<endl ;
+                }
+            }
+        }
+
+    }
+
+
+
+    return 0;
+}
